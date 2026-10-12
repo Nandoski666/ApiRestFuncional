@@ -1,0 +1,62 @@
+{
+  "info": {
+    "name": "API Avistamientos de Aves",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Registrar avistamiento (201)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"especie\": \"Barranquero\",\n  \"lugar\": \"Humedal La Conejera\",\n  \"fecha\": \"2026-09-20\",\n  \"observador\": \"Hernando Garcia\"\n}" },
+        "url": "{{baseUrl}}/avistamientos"
+      }
+    },
+    {
+      "name": "Registrar con datos faltantes (400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"especie\": \"Toche\"\n}" },
+        "url": "{{baseUrl}}/avistamientos"
+      }
+    },
+    {
+      "name": "Listar todos (200)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/avistamientos" }
+    },
+    {
+      "name": "Ver uno (200)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/avistamientos/1" }
+    },
+    {
+      "name": "Ver uno inexistente (404)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/avistamientos/999" }
+    },
+    {
+      "name": "Actualizar (200)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"especie\": \"Barranquero\",\n  \"lugar\": \"Jardin Botanico de Bogota\",\n  \"fecha\": \"2026-09-22\",\n  \"observador\": \"Hernando Garcia\"\n}" },
+        "url": "{{baseUrl}}/avistamientos/1"
+      }
+    },
+    {
+      "name": "Resumen por especie (200)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/avistamientos/resumen" }
+    },
+    {
+      "name": "Eliminar (204)",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/avistamientos/1" }
+    },
+    {
+      "name": "Eliminar inexistente (404)",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/avistamientos/999" }
+    }
+  ]
+}

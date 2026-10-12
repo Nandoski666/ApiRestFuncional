@@ -1,0 +1,18 @@
+{
+  "name": "api-avistamientos-aves",
+  "version": "1.0.0",
+  "description": "API REST para registrar avistamientos de aves (ISW-2, Sesión 17)",
+  "main": "server.js",
+  "author": "Hernando Javier García Mogollón",
+  "license": "MIT",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
