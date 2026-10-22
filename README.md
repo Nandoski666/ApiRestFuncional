@@ -1,7 +1,10 @@
 # API REST de avistamientos de aves
 
-Trabajo en clase de Ingeniería de Software 2 (ISW-2), Sesión 17, Universidad El Bosque.
+Trabajo en clase de Ingeniería de Software 2 (ISW-2), Universidad El Bosque.
 Autor: Hernando Javier García Mogollón.
+
+- Sesión 17 (29 de septiembre): construir la API REST.
+- Sesión 22 (21 de octubre): taller de pruebas unitarias y de integración sobre la misma API. La justificación de las decisiones de pruebas está en [`docs/justificacion-pruebas.md`](docs/justificacion-pruebas.md) (también en PDF: [`docs/justificacion-pruebas.pdf`](docs/justificacion-pruebas.pdf)).
 
 API REST para registrar avistamientos de aves. Recibe y responde JSON y guarda los datos en SQLite con el módulo integrado `node:sqlite` de Node.js.
 
@@ -9,7 +12,7 @@ API REST para registrar avistamientos de aves. Recibe y responde JSON y guarda l
 
 - Node.js 22.13 o superior (trae `node:sqlite` integrado, no hay que instalar SQLite aparte)
 - Express 5
-- Pruebas con el runner integrado de Node (`node:test`)
+- Jest 30 (pruebas unitarias, dobles de prueba y cobertura) y Supertest 7 (pruebas de la API por HTTP)
 
 ## Instalación y ejecución
 
@@ -50,7 +53,17 @@ Para usar otro puerto: `PORT=4000 npm start` (en PowerShell: `$env:PORT=4000; np
 }
 ```
 
-El `id` lo asigna el sistema. `especie`, `lugar`, `fecha` y `observador` son obligatorios y `fecha` debe tener formato AAAA-MM-DD.
+El `id` lo asigna el sistema.
+
+### Regla de negocio
+
+Un avistamiento es válido si:
+
+- la `especie` tiene entre 3 y 50 caracteres (sin contar los espacios de los extremos);
+- la `fecha` tiene el formato AAAA-MM-DD, es una fecha real y no es posterior a hoy (hoy en hora de Colombia, `America/Bogota`);
+- el `lugar` y el `observador` no están vacíos.
+
+Si no es válido, POST y PUT responden 400 indicando qué campo falló. La regla vive en la clase `ValidadorDeAvistamiento` (`src/validador.js`), separada del controlador.
 
 ## Endpoints
 
@@ -63,7 +76,23 @@ El `id` lo asigna el sistema. `especie`, `lugar`, `fecha` y `observador` son obl
 | DELETE | /avistamientos/{id} | Eliminar | 204, 404 |
 | GET | /avistamientos/resumen | Cantidad por especie (bonus) | 200 |
 
-Los errores responden JSON, por ejemplo `{"error": "Avistamiento no encontrado"}`.
+Los errores responden JSON. Un 404:
+
+```json
+{"error": "Avistamiento no encontrado"}
+```
+
+Un 400 dice qué campo falló:
+
+```json
+{
+  "error": "Datos inválidos",
+  "detalles": [
+    {"campo": "especie", "mensaje": "El campo especie debe tener entre 3 y 50 caracteres (tiene 2)"},
+    {"campo": "fecha", "mensaje": "El campo fecha no puede ser posterior a hoy (2026-10-21)"}
+  ]
+}
+```
 
 ## Ejemplos con curl
 
@@ -83,6 +112,14 @@ Registrar con datos faltantes (400):
 curl -i -X POST http://localhost:3000/avistamientos \
   -H "Content-Type: application/json" \
   -d '{"especie":"Toche"}'
+```
+
+Registrar con una regla de negocio incumplida (400 indicando el campo; la fecha no puede ser posterior a hoy):
+
+```bash
+curl -i -X POST http://localhost:3000/avistamientos \
+  -H "Content-Type: application/json" \
+  -d '{"especie":"Ab","lugar":"Humedal Cordoba","fecha":"2099-01-01","observador":"Hernando Garcia"}'
 ```
 
 Listar todos (200):
@@ -124,13 +161,37 @@ Respuesta de ejemplo:
 [{"especie":"Barranquero","cantidad":2},{"especie":"Toche","cantidad":1}]
 ```
 
-## Pruebas
+## Pruebas y cobertura
+
+| Qué | Comando |
+|---|---|
+| Todas las pruebas (51) | `npm test` |
+| Solo las unitarias (33) | `npm run test:unit` |
+| Solo las de integración (18) | `npm run test:integracion` |
+| Cobertura | `npm run cobertura` |
 
 ```bash
 npm test
 ```
 
-Son pruebas de integración: levantan la API con una base SQLite en memoria y prueban todos los endpoints y códigos de estado (200, 201, 204, 400, 404).
+```bash
+npm run cobertura
+```
+
+`npm run cobertura` imprime la tabla de cobertura en la terminal y genera el reporte HTML en `coverage/index.html`.
+
+Las pruebas están en la carpeta `test/`:
+
+- `test/unit/`: pruebas unitarias, sin Express ni base de datos.
+  - `validador.test.js`: la regla de negocio, con partición de equivalencia y valores límite (especie de 2, 3, 50 y 51 caracteres; fecha de hoy y de mañana).
+  - `servicio.test.js`: el servicio con un repositorio en memoria (fake) y spies.
+  - `reloj.test.js`: el reloj del sistema (fecha de Colombia y no de UTC).
+- `test/integracion/`: los cinco endpoints y el resumen a través de HTTP con Supertest. Usan la base SQLite real en memoria, una nueva por cada prueba, y verifican el código, el cuerpo y el efecto (por ejemplo, que después del DELETE el GET responda 404).
+- `test/dobles/`: los dobles de prueba `RelojFijo` (stub) y `RepositorioEnMemoria` (fake).
+
+La tabla de casos, los dobles, lo que no se probó y la lectura de la cobertura están explicados en [`docs/justificacion-pruebas.md`](docs/justificacion-pruebas.md).
+
+Nota: `npm install` muestra advertencias moderadas de `npm audit`. Vienen de dependencias internas de Jest (solo de desarrollo). Las dependencias de la API en producción no tienen vulnerabilidades (`npm audit --omit=dev`).
 
 ## Capturas de funcionamiento
 
@@ -176,24 +237,51 @@ DELETE /avistamientos/{id} → 204 No Content, y otra vez → 404:
 
 ![DELETE 204 y 404](capturas/10_delete_204_404.png)
 
-Pruebas de integración (`npm test`), 13 de 13 pasan:
+Regla de negocio: especie de 2 caracteres → 400 (`especie`), fecha de mañana → 400 (`fecha`), fecha de hoy → 201. Se tomó a las 8:32 p. m. del 21 de octubre en Bogotá, cuando en UTC ya era 22:
 
-![npm test](capturas/11_npm_test.png)
+![Regla de negocio](capturas/11_regla_de_negocio.png)
+
+Pruebas unitarias (`npm run test:unit`), 33 pasan:
+
+![Pruebas unitarias](capturas/12_pruebas_unitarias.png)
+
+Pruebas de integración (`npm run test:integracion`), 18 pasan:
+
+![Pruebas de integración](capturas/13_pruebas_integracion.png)
+
+Cobertura (`npm run cobertura`):
+
+![Cobertura en texto](capturas/14_cobertura_texto.png)
+
+![Cobertura HTML](capturas/15_cobertura_html.png)
+
+Ramas sin cubrir que se analizan en el documento de justificación:
+
+![Cobertura reloj.js](capturas/16_cobertura_reloj.png)
+
+![Cobertura repositorio.js](capturas/17_cobertura_repositorio.png)
 
 ## Estructura
 
 ```
-server.js            Punto de entrada (abre la base y levanta el servidor)
-src/app.js           Rutas y códigos de estado
-src/repositorio.js   Consultas SQL
-src/validacion.js    Validación de datos del avistamiento
-src/db.js            Conexión a SQLite y creación de la tabla
-test/api.test.js     Pruebas de integración
-capturas/            Capturas de la API funcionando
-postman_collection.json  Colección para importar en Postman
+server.js                     Punto de entrada: arma las piezas y levanta el servidor
+src/app.js                    Rutas (controlador): traduce HTTP <-> servicio y errores -> 400/404/500
+src/servicio.js               ServicioDeAvistamientos: casos de uso (recibe repositorio y validador)
+src/validador.js              ValidadorDeAvistamiento: la regla de negocio
+src/reloj.js                  RelojDelSistema: la fecha de hoy en hora de Colombia
+src/errores.js                ErrorDeValidacion y NoEncontrado
+src/repositorio.js            Consultas SQL
+src/db.js                     Conexión a SQLite y creación de la tabla
+test/unit/                    Pruebas unitarias
+test/integracion/             Pruebas de integración por HTTP (Supertest)
+test/dobles/                  RelojFijo (stub) y RepositorioEnMemoria (fake)
+docs/                         Documento de justificación del taller de pruebas (Markdown y PDF)
+capturas/                     Capturas de la API, las pruebas y la cobertura
+postman_collection.json       Colección para importar en Postman
 ```
 
 ## Uso de inteligencia artificial y referencias
 
-- Se usó Claude (Anthropic), modelo Claude Opus 5.5, como apoyo para generar la estructura del código, las pruebas y este README. El código fue revisado, probado y entendido por el autor.
-- Documentación consultada: Express (https://expressjs.com) y el módulo `node:sqlite` de Node.js (https://nodejs.org/api/sqlite.html).
+- Se usó Claude (Anthropic), modelo Claude Opus 5.5, como apoyo para generar la estructura del código, la refactorización para el taller de pruebas, las pruebas, el documento de justificación y este README. El código fue revisado, probado y entendido por el autor.
+- Documentación consultada: Express (https://expressjs.com), el módulo `node:sqlite` de Node.js (https://nodejs.org/api/sqlite.html), Jest (https://jestjs.io) y Supertest (https://github.com/ladjs/supertest).
+- Conceptos de pruebas: presentación de la Sesión 20 de ISW-2 (partición, valores límite, AAA, FIRST y los cinco dobles), Myers (1979) y Meszaros (2007).
