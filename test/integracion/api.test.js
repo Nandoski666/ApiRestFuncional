@@ -4,8 +4,8 @@
 const request = require('supertest');
 const { abrirBaseDeDatos } = require('../../src/db');
 const { crearRepositorio } = require('../../src/repositorio');
-const { ValidadorDeAvistamiento } = require('../../src/validador');
-const { ServicioDeAvistamientos } = require('../../src/servicio');
+const { ValidadorDeAvistamiento } = require('../../src/domain/validador');
+const { ServicioDeAvistamientos } = require('../../src/application/ServicioDeAvistamientos');
 const { crearApp } = require('../../src/app');
 const { RelojFijo } = require('../dobles/RelojFijo');
 

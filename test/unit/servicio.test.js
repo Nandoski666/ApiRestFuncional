@@ -1,8 +1,8 @@
 // Pruebas unitarias del ServicioDeAvistamientos, aislado de SQLite y del reloj del sistema.
 // Dobles: RepositorioEnMemoria (fake), RelojFijo (stub) y jest.spyOn sobre el repositorio (spy).
-const { ServicioDeAvistamientos } = require('../../src/servicio');
-const { ValidadorDeAvistamiento } = require('../../src/validador');
-const { ErrorDeValidacion, NoEncontrado } = require('../../src/errores');
+const { ServicioDeAvistamientos } = require('../../src/application/ServicioDeAvistamientos');
+const { ValidadorDeAvistamiento } = require('../../src/domain/validador');
+const { ErrorDeValidacion, NoEncontrado } = require('../../src/domain/errores');
 const { RepositorioEnMemoria } = require('../dobles/RepositorioEnMemoria');
 const { RelojFijo } = require('../dobles/RelojFijo');
 
