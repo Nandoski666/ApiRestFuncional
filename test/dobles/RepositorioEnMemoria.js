@@ -1,5 +1,5 @@
 // Doble de tipo fake: un repositorio que funciona de verdad, pero guarda en un Map en memoria
-// en lugar de SQLite. Tiene la misma interfaz que src/repositorio.js.
+// en lugar de SQLite. Tiene la misma interfaz que el adaptador de persistencia.
 class RepositorioEnMemoria {
   constructor(iniciales = []) {
     this.datos = new Map();

@@ -1,4 +1,10 @@
 // Capa de acceso a datos: aquí vive todo el SQL.
+const { crearAvistamiento } = require('../../domain/Avistamiento');
+
+function normalizarAvistamiento(fila) {
+  return fila ? crearAvistamiento(fila) : undefined;
+}
+
 function crearRepositorio(db) {
   const sql = {
     listar: db.prepare('SELECT id, especie, lugar, fecha, observador FROM avistamientos ORDER BY id'),
@@ -13,18 +19,18 @@ function crearRepositorio(db) {
 
   return {
     listar() {
-      return sql.listar.all();
+      return sql.listar.all().map(crearAvistamiento);
     },
     buscarPorId(id) {
-      return sql.buscar.get(id);
+      return normalizarAvistamiento(sql.buscar.get(id));
     },
     crear(a) {
       const resultado = sql.insertar.run(a.especie, a.lugar, a.fecha, a.observador);
-      return sql.buscar.get(resultado.lastInsertRowid);
+      return normalizarAvistamiento(sql.buscar.get(resultado.lastInsertRowid));
     },
     actualizar(id, a) {
       const resultado = sql.actualizar.run(a.especie, a.lugar, a.fecha, a.observador, id);
-      return resultado.changes > 0 ? sql.buscar.get(id) : undefined;
+      return resultado.changes > 0 ? normalizarAvistamiento(sql.buscar.get(id)) : undefined;
     },
     eliminar(id) {
       return sql.eliminar.run(id).changes > 0;

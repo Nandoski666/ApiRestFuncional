@@ -1,7 +1,7 @@
 // Pruebas unitarias de la regla de negocio (ValidadorDeAvistamiento).
 // Los casos salen de la tabla de partición y valores límite de docs/justificacion-pruebas.md.
 // "Hoy" se fija con el stub RelojFijo en 2026-10-21, así las pruebas dan lo mismo cualquier día.
-const { ValidadorDeAvistamiento } = require('../../src/validador');
+const { ValidadorDeAvistamiento } = require('../../src/domain/validador');
 const { RelojFijo } = require('../dobles/RelojFijo');
 
 const HOY = '2026-10-21';

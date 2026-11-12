@@ -1,6 +1,17 @@
-// Casos de uso de los avistamientos. Recibe el repositorio y el validador por el constructor
-// (inversión de dependencias), así en las pruebas se le pueden entregar dobles.
-const { ErrorDeValidacion, NoEncontrado } = require('./errores');
+// Casos de uso de los avistamientos. Recibe el repositorio y el validador por el constructor.
+const { ErrorDeValidacion, NoEncontrado } = require('../domain/errores');
+
+/** @typedef {import('../domain/Avistamiento').Avistamiento} Avistamiento */
+/**
+ * Puerto que debe implementar cualquier adaptador de persistencia.
+ * @typedef {Object} RepositorioAvistamientos
+ * @property {() => Avistamiento[]} listar
+ * @property {(id: number) => Avistamiento | undefined} buscarPorId
+ * @property {(datos: Omit<Avistamiento, 'id'>) => Avistamiento} crear
+ * @property {(id: number, datos: Omit<Avistamiento, 'id'>) => Avistamiento | undefined} actualizar
+ * @property {(id: number) => boolean} eliminar
+ * @property {() => Array<{especie: string, cantidad: number}>} resumen
+ */
 
 // El {id} de la URL debe ser un entero positivo; si no lo es, ese avistamiento no existe.
 function aId(valor) {
@@ -9,6 +20,10 @@ function aId(valor) {
 }
 
 class ServicioDeAvistamientos {
+  /**
+   * @param {RepositorioAvistamientos} repositorio
+   * @param {import('../domain/validador').ValidadorDeAvistamiento} validador
+   */
   constructor(repositorio, validador) {
     this.repositorio = repositorio;
     this.validador = validador;

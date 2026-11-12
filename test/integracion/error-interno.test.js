@@ -2,7 +2,7 @@
 // provocar ese fallo, así que el servicio se reemplaza por un stub que lanza un error, y console.error
 // por un spy que lo silencia y deja comprobar que el error sí quedó registrado en el log.
 const request = require('supertest');
-const { crearApp } = require('../../src/app');
+const { crearApp } = require('../../src/infrastructure/http/app');
 
 test('responde 500 en JSON sin exponer el detalle del error cuando el servicio falla inesperadamente', async () => {
   // Arrange
