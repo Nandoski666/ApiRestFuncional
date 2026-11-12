@@ -1,6 +1,6 @@
 // Rutas de la API (el controlador). Solo traduce HTTP <-> servicio; la lógica está en el servicio y el validador.
 const express = require('express');
-const { ErrorDeValidacion, NoEncontrado } = require('./errores');
+const { ErrorDeValidacion, NoEncontrado } = require('../../domain/errores');
 
 function crearApp(servicio) {
   const app = express();

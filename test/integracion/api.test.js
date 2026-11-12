@@ -2,11 +2,11 @@
 // con Supertest. Cada prueba arma su propia app con una base SQLite nueva en memoria, así ninguna depende
 // de otra ni del orden. Lo único que se reemplaza es el reloj (stub RelojFijo), para que "hoy" no cambie.
 const request = require('supertest');
-const { abrirBaseDeDatos } = require('../../src/db');
-const { crearRepositorio } = require('../../src/repositorio');
+const { abrirBaseDeDatos } = require('../../src/infrastructure/persistence/db');
+const { crearRepositorio } = require('../../src/infrastructure/persistence/repositorio');
 const { ValidadorDeAvistamiento } = require('../../src/domain/validador');
 const { ServicioDeAvistamientos } = require('../../src/application/ServicioDeAvistamientos');
-const { crearApp } = require('../../src/app');
+const { crearApp } = require('../../src/infrastructure/http/app');
 const { RelojFijo } = require('../dobles/RelojFijo');
 
 const barranquero = {

@@ -1,6 +1,6 @@
 // Pruebas unitarias del RelojDelSistema. El instante "ahora" se reemplaza por una función fija (stub),
 // así se puede probar la hora exacta en la que UTC y Colombia ya están en días distintos.
-const { RelojDelSistema } = require('../../src/reloj');
+const { RelojDelSistema } = require('../../src/infrastructure/clock/reloj');
 
 describe('RelojDelSistema.hoy', () => {
   test('devuelve la fecha de Colombia y no la de UTC cuando en UTC ya es el día siguiente', () => {
